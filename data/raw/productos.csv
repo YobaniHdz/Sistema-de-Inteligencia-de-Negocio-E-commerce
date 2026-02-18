@@ -1,0 +1,16 @@
+producto_id,nombre_producto,categoria
+P001,Laptop Pro,Electrónica
+P002,Smartphone Pro,Electrónica
+P003,Tablet Pro,Electrónica
+P004,Audífonos Pro,Electrónica
+P005,Smartwatch Pro,Electrónica
+P006,Cafetera Pro,Hogar
+P007,Silla Pro,Hogar
+P008,Mesa Pro,Hogar
+P009,Lámpara Pro,Hogar
+P010,Aspiradora Pro,Hogar
+P011,Playera Pro,Ropa
+P012,Pantalón Pro,Ropa
+P013,Sudadera Pro,Ropa
+P014,Tenis Pro,Ropa
+P015,Chaqueta Pro,Ropa
