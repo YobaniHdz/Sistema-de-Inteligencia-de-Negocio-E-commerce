@@ -15,18 +15,26 @@ st.set_page_config(
 st.title("Sistema de Inteligencia de Negocio — E-commerce")
 
 # -------------------------
-# Cargar datos procesados
+# Paths
 # -------------------------
 
-#DATA_PATH = Path("../data/processed/ventas_limpias.csv")
 BASE_DIR = Path(__file__).resolve().parents[1]
+
 DATA_PATH = BASE_DIR / "data" / "processed" / "ventas_limpias.csv"
+CLIENTES_PATH = BASE_DIR / "data" / "raw" / "clientes.csv"
+
+# -------------------------
+# Cargar datos + joins
+# -------------------------
 
 @st.cache_data
 def load_data():
+
     df = pd.read_csv(DATA_PATH)
     df["fecha"] = pd.to_datetime(df["fecha"])
+
     return df
+
 
 df = load_data()
 
@@ -42,7 +50,9 @@ segmento = st.sidebar.multiselect(
     default=df["segmento_cliente"].unique()
 )
 
-df = df[df["segmento_cliente"].isin(segmento)]
+df_filtrado = df[
+    df["segmento_cliente"].isin(segmento)
+]
 
 # -------------------------
 # KPIs principales
@@ -50,9 +60,9 @@ df = df[df["segmento_cliente"].isin(segmento)]
 
 col1, col2, col3 = st.columns(3)
 
-ingresos_totales = df["ingreso"].sum()
-ganancia_total = df["ganancia"].sum()
-margen_promedio = df["margen_pct"].mean()
+ingresos_totales = df_filtrado["ingreso"].sum()
+ganancia_total = df_filtrado["ganancia"].sum()
+margen_promedio = df_filtrado["margen_pct"].mean()
 
 col1.metric("💰 Ingresos totales", f"${ingresos_totales:,.0f}")
 col2.metric("📈 Ganancia total", f"${ganancia_total:,.0f}")
@@ -67,7 +77,7 @@ st.divider()
 st.subheader("Rentabilidad por producto")
 
 rentabilidad = (
-    df.groupby("producto")
+    df_filtrado.groupby("nombre_producto")
     .agg({
         "ingreso": "sum",
         "ganancia": "sum"
@@ -77,15 +87,19 @@ rentabilidad = (
 
 fig_prod = px.bar(
     rentabilidad,
-    x="producto",
+    x="nombre_producto",
     y="ganancia",
     title="Ganancia total por producto"
 )
 
 st.plotly_chart(fig_prod, use_container_width=True)
 
+# -------------------------
+# Ganancia por categoría
+# -------------------------
+
 ganancia_categoria = (
-    df.groupby("categoria")["ganancia"]
+    df_filtrado.groupby("categoria")["ganancia"]
     .sum()
     .reset_index()
 )
@@ -97,9 +111,9 @@ fig_cat = px.pie(
     title="Distribución de ganancia por categoría",
     hole=0.3,
     color_discrete_sequence=[
-        "#2389d1",  
-        "#91d1e4",  
-        "#d8cbb3"  
+        "#2389d1",
+        "#91d1e4",
+        "#d8cbb3"
     ]
 )
 
@@ -107,23 +121,22 @@ fig_cat.update_traces(textinfo="percent+label")
 
 st.plotly_chart(fig_cat, use_container_width=True)
 
-
-
-
 # -------------------------
 # Segmentación de clientes
 # -------------------------
 
 st.subheader("Segmentación de clientes")
 
-clientes = (
-    df.groupby(["cliente_id", "segmento_cliente"])["ingreso"]
+clientes_segmento = (
+    df_filtrado.groupby(
+        ["nombre_completo", "segmento_cliente"]
+    )["ingreso"]
     .sum()
     .reset_index()
 )
 
 fig_clientes = px.box(
-    clientes,
+    clientes_segmento,
     x="segmento_cliente",
     y="ingreso",
     title="Distribución de valor por segmento"
@@ -138,7 +151,7 @@ st.plotly_chart(fig_clientes, use_container_width=True)
 st.subheader("Tendencia de ganancias")
 
 tendencia = (
-    df.groupby("fecha")["ganancia"]
+    df_filtrado.groupby("fecha")["ganancia"]
     .sum()
     .reset_index()
 )
@@ -147,7 +160,7 @@ fig_time = px.line(
     tendencia,
     x="fecha",
     y="ganancia",
-    title="Ganancia diaria"
+    title="Ganancia en el tiempo"
 )
 
 st.plotly_chart(fig_time, use_container_width=True)
@@ -156,14 +169,27 @@ st.plotly_chart(fig_time, use_container_width=True)
 # Top clientes
 # -------------------------
 
-st.subheader("Top clientes")
+st.subheader("Top 10 clientes")
 
 top_clientes = (
-    df.groupby("cliente_id")["ingreso"]
+    df_filtrado.groupby("nombre_completo")["ingreso"]
     .sum()
     .sort_values(ascending=False)
     .head(10)
     .reset_index()
 )
 
-st.dataframe(top_clientes, use_container_width=True)
+# Renombrar columnas para presentación
+top_clientes.columns = ["Cliente", "Ingresos totales"]
+
+# Crear ranking empezando en 1
+top_clientes.index = range(1, len(top_clientes) + 1)
+
+# Mostrar tabla con formato bonito
+st.dataframe(
+    top_clientes.style.format({
+        "Ingresos totales": "${:,.2f}"
+    }),
+    use_container_width=True
+)
+
