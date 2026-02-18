@@ -18,7 +18,9 @@ st.title("Sistema de Inteligencia de Negocio — E-commerce")
 # Cargar datos procesados
 # -------------------------
 
-DATA_PATH = Path("../data/processed/ventas_limpias.csv")
+#DATA_PATH = Path("../data/processed/ventas_limpias.csv")
+BASE_DIR = Path(__file__).resolve().parents[1]
+DATA_PATH = BASE_DIR / "data" / "processed" / "ventas_limpias.csv"
 
 @st.cache_data
 def load_data():
