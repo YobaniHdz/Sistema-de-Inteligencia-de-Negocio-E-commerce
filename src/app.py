@@ -34,7 +34,7 @@ def load_data():
     df["fecha"] = pd.to_datetime(df["fecha"])
 
     # DEBUG (puedes quitarlo luego)
-    st.write("Columnas cargadas:", df.columns.tolist())
+    #st.write("Columnas cargadas:", df.columns.tolist())
 
     # Fallback inteligente por si cambia el nombre
     if "nombre_producto" not in df.columns:
